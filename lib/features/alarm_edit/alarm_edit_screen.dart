@@ -21,6 +21,7 @@ class AlarmEditScreen extends ConsumerStatefulWidget {
 class _AlarmEditScreenState extends ConsumerState<AlarmEditScreen> {
   late TimeOfDay _time;
   late String _label;
+  late TextEditingController _labelController;
   late List<bool> _repeatDays;
   late AlarmDifficulty _difficulty;
   late int _problemCount;
@@ -40,6 +41,7 @@ class _AlarmEditScreenState extends ConsumerState<AlarmEditScreen> {
         ? TimeOfDay(hour: a.hour, minute: a.minute)
         : TimeOfDay.now();
     _label = a?.label ?? '알람';
+    _labelController = TextEditingController(text: _label);
     _repeatDays = List.from(a?.repeatDays ?? List.filled(7, false));
     _difficulty = a?.difficulty ?? defaults.defaultDifficulty;
     _problemCount = a?.problemCount ?? defaults.defaultProblemCount;
@@ -47,6 +49,12 @@ class _AlarmEditScreenState extends ConsumerState<AlarmEditScreen> {
     _volume = a?.volume ?? defaults.defaultVolume;
     _fadeIn = a?.fadeIn ?? defaults.defaultFadeIn;
     _vibration = a?.vibrationPattern ?? defaults.defaultVibration;
+  }
+
+  @override
+  void dispose() {
+    _labelController.dispose();
+    super.dispose();
   }
 
   Future<void> _pickTime() async {
@@ -69,7 +77,7 @@ class _AlarmEditScreenState extends ConsumerState<AlarmEditScreen> {
   Future<void> _save() async {
     final alarm = AlarmModel(
       id: widget.alarm?.id ?? const Uuid().v4(),
-      label: _label.trim().isEmpty ? '알람' : _label.trim(),
+      label: _labelController.text.trim().isEmpty ? '알람' : _labelController.text.trim(),
       hour: _time.hour,
       minute: _time.minute,
       repeatDays: _repeatDays,
@@ -147,8 +155,7 @@ class _AlarmEditScreenState extends ConsumerState<AlarmEditScreen> {
                 prefixIcon:
                     Icon(Icons.label_outline, color: AppColors.textSecondary),
               ),
-              controller: TextEditingController(text: _label),
-              onChanged: (v) => _label = v,
+              controller: _labelController,
             ),
           ),
 

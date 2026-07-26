@@ -99,8 +99,8 @@ class AlarmModel extends HiveObject {
       return todayAlarm.isAfter(now) ? todayAlarm : todayAlarm.add(const Duration(days: 1));
     }
 
-    // 오늘부터 7일 안에서 가장 가까운 활성 요일 탐색
-    for (int i = 0; i < 7; i++) {
+    // 오늘부터 최대 8일(같은 요일 다음 주 포함) 안에서 가장 가까운 활성 요일 탐색
+    for (int i = 0; i < 8; i++) {
       final candidate = todayAlarm.add(Duration(days: i));
       // DateTime.weekday: 1=월, 7=일 → index 변환: (weekday-1)
       final dayIndex = (candidate.weekday - 1) % 7;
