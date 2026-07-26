@@ -62,6 +62,17 @@ class AlarmCard extends ConsumerWidget {
                       _DifficultyChip(difficulty: alarm.difficulty),
                     ],
                   ),
+                  if (alarm.isEnabled) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      alarm.timeUntilLabel(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.primary.withOpacity(0.85),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

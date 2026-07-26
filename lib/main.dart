@@ -47,6 +47,15 @@ Future<void> main() async {
     onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
   );
 
+  // ── cold-start: 알림/fullScreenIntent로 앱이 실행된 경우 처리 ───────────
+  // navigator 준비 전이므로 navigateToAlarmRing이 _pendingAlarmId에 보관하고
+  // MathWakeApp.initState의 addPostFrameCallback에서 실제 이동 처리
+  final launchDetails = await notifPlugin.getNotificationAppLaunchDetails();
+  if (launchDetails?.didNotificationLaunchApp == true) {
+    final payload = launchDetails?.notificationResponse?.payload;
+    if (payload != null) navigateToAlarmRing(payload);
+  }
+
   // ── 재부팅 또는 앱 재시작 후 알람 복원 ─────────────────────────────────
   await AlarmScheduler().rescheduleAll();
 

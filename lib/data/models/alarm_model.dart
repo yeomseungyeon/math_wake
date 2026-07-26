@@ -130,4 +130,21 @@ class AlarmModel extends HiveObject {
 
   String get timeString =>
       '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+
+  /// 알람 목록에 표시할 "N시간 후 알람" 형태의 레이블
+  String timeUntilLabel() {
+    if (!isEnabled) return '';
+    final trigger = nextTriggerTime();
+    if (trigger == null) return '';
+    final diff = trigger.difference(DateTime.now());
+    if (diff.isNegative) return '';
+    final totalMinutes = diff.inMinutes;
+    final h = totalMinutes ~/ 60;
+    final m = totalMinutes % 60;
+    if (h >= 48) return '${diff.inDays}일 후 알람';
+    if (h >= 24) return '내일 $timeString 알람';
+    if (h > 0) return m > 0 ? '$h시간 $m분 후 알람' : '$h시간 후 알람';
+    if (m > 0) return '$m분 후 알람';
+    return '곧 알람이 울림';
+  }
 }

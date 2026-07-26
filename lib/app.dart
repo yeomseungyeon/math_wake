@@ -8,8 +8,41 @@ import 'features/settings/settings_screen.dart';
 /// 전역 NavigatorKey — 알림 탭 시 알람 울림 화면으로 이동할 때 사용
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-class MathWakeApp extends StatelessWidget {
+/// cold-start 시 navigator 준비 전에 수신된 알람 ID를 보관
+String? _pendingAlarmId;
+
+/// 알림 탭 또는 fullScreenIntent → 알람 울림 화면으로 이동
+/// navigator가 아직 준비되지 않은 경우 MathWakeApp.initState에서 처리
+void navigateToAlarmRing(String alarmId) {
+  final state = navigatorKey.currentState;
+  if (state != null) {
+    state.pushNamed('/alarm-ring', arguments: alarmId);
+  } else {
+    _pendingAlarmId = alarmId;
+  }
+}
+
+class MathWakeApp extends StatefulWidget {
   const MathWakeApp({super.key});
+
+  @override
+  State<MathWakeApp> createState() => _MathWakeAppState();
+}
+
+class _MathWakeAppState extends State<MathWakeApp> {
+  @override
+  void initState() {
+    super.initState();
+    // 첫 프레임 완료 후 보류 중인 알람 화면 이동 처리
+    // (cold-start 시 navigator 준비 전에 수신된 알람 ID 처리)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final pending = _pendingAlarmId;
+      if (pending != null) {
+        _pendingAlarmId = null;
+        navigateToAlarmRing(pending);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +67,6 @@ class MathWakeApp extends StatelessWidget {
           '/': (_) => const AlarmListScreen(),
           '/settings': (_) => const SettingsScreen(),
         },
-        // 알람 울림 화면은 alarmId 인자가 필요해 onGenerateRoute로 처리
         onGenerateRoute: (settings) {
           if (settings.name == '/alarm-ring') {
             final alarmId = settings.arguments as String;
@@ -48,9 +80,4 @@ class MathWakeApp extends StatelessWidget {
       ),
     );
   }
-}
-
-/// 알림 탭 → 알람 울림 화면으로 이동 (어디서든 호출 가능)
-void navigateToAlarmRing(String alarmId) {
-  navigatorKey.currentState?.pushNamed('/alarm-ring', arguments: alarmId);
 }
