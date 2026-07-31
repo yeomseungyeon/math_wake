@@ -7,9 +7,15 @@ class AlarmConstants {
   static const String settingsBoxName = 'settings';
 
   // 알람 채널 (Android)
-  static const String channelId = 'math_wake_alarm_channel';
+  // v2: 소리·진동 활성화 채널. 이전 채널(v1)은 무음으로 생성돼 Android가 캐시함.
+  // 채널 ID가 달라야 새 설정(소리·진동)이 적용됨.
+  static const String channelId = 'math_wake_alarm_v2';
   static const String channelName = 'MathWake 알람';
   static const String channelDescription = '기상 미션 알람 채널';
+
+  /// 알람 에셋 파일명(.mp3) → Android res/raw 리소스 이름(확장자 없이)
+  static String rawResourceName(String soundAsset) =>
+      soundAsset.replaceAll('.mp3', '').replaceAll('-', '_');
 
   // Foreground Service 알림 ID (Android)
   static const int foregroundNotificationId = 888;

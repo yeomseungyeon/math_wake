@@ -1,15 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/utils/permission_helper.dart';
 import '../../providers/alarm_list_provider.dart';
 import '../alarm_edit/alarm_edit_screen.dart';
 import 'widgets/alarm_card.dart';
 
-class AlarmListScreen extends ConsumerWidget {
+class AlarmListScreen extends ConsumerStatefulWidget {
   const AlarmListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AlarmListScreen> createState() => _AlarmListScreenState();
+}
+
+class _AlarmListScreenState extends ConsumerState<AlarmListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) PermissionHelper.requestAll(context);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final alarms = ref.watch(alarmListProvider);
 
     return Scaffold(

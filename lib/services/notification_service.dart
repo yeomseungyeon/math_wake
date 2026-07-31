@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
@@ -75,38 +76,42 @@ class NotificationService {
   }
 
   /// Android: exact alarm + full-screen intent
+  /// 알림 자체에서 소리·진동을 내어 AlarmRingScreen 이동이 지연돼도 알람이 울림
   Future<void> _scheduleAndroid(AlarmModel alarm, DateTime trigger) async {
-    const androidDetails = AndroidNotificationDetails(
+    // 알람 에셋 파일명 → res/raw 리소스 이름
+    final rawName = AlarmConstants.rawResourceName(alarm.soundAsset);
+    final androidDetails = AndroidNotificationDetails(
       AlarmConstants.channelId,
       AlarmConstants.channelName,
       channelDescription: AlarmConstants.channelDescription,
       importance: Importance.max,
       priority: Priority.max,
-      // 잠금 화면에서 전체 화면으로 열기
       fullScreenIntent: true,
-      // 알람 카테고리 (Android 잠금 화면 표시 방식 결정)
       category: AndroidNotificationCategory.alarm,
-      // 스와이프로 지우지 못하게
       autoCancel: false,
       ongoing: true,
-      // 소리는 포그라운드 서비스에서 재생하므로 알림 자체 사운드는 없앰
-      playSound: false,
-      enableVibration: false,
+      // 알림 자체에서 소리·진동 재생 — AlarmRingScreen이 열리면 just_audio가 이어받음
+      playSound: true,
+      sound: RawResourceAndroidNotificationSound(rawName),
+      enableVibration: true,
+      vibrationPattern: Int64List.fromList([0, 500, 300, 500, 300, 500]),
     );
 
     final notifId = _alarmNotifId(alarm.id);
-    final tzTime = tz.TZDateTime.from(trigger, tz.local);
+    // TZDateTime은 절대 시각(epoch) 기준으로 동작하므로 tz.UTC를 사용해
+    // 기기 타임존 설정과 무관하게 trigger의 epoch 시각에 정확히 발동됨
+    final tzTime = tz.TZDateTime.from(trigger, tz.UTC);
 
     await _plugin.zonedSchedule(
       notifId,
       alarm.label,
-      '알람을 끄려면 수학 문제를 풀어주세요',
+      '알람이 울리고 있습니다. 탭해서 수학 문제를 풀어주세요',
       tzTime,
-      const NotificationDetails(android: androidDetails),
+      NotificationDetails(android: androidDetails),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
-      payload: alarm.id, // 탭 시 어떤 알람인지 식별
+      payload: alarm.id,
     );
   }
 
